@@ -71,7 +71,7 @@
   /* Game player (full screen over everything) */
   .player { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #fff; display: none; z-index: 20; }
   .player.open { display: block; }
-  .player iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .player iframe { position: relative; z-index: 1; width: 100%; height: 100%; border: 0; display: block; background: #fff; }
   .back {
     position: absolute; top: 2vh; left: 2vh; z-index: 2;
     background: var(--bg); color: var(--fg); border: 0; border-radius: 999px;
@@ -126,7 +126,7 @@
           <div class="how">Tap the screen to jump</div>
         </button>
 
-        <button class="tile" data-game="https://gabrielecirulli.github.io/2048/">
+        <button class="tile" data-game="https://pj56drjjyw-coder.github.io/2048/">
           <div class="art">
             <div class="grid4">
               <span style="background:#eee4da">2</span>
@@ -139,7 +139,7 @@
           <div class="how">Swipe to slide and merge tiles</div>
         </button>
 
-        <button class="tile" data-game="https://hextris.github.io/hextris/">
+        <button class="tile" data-game="https://pj56drjjyw-coder.github.io/hextris/">
           <div class="art">
             <svg width="120" height="80" viewBox="0 0 120 80" aria-hidden="true">
               <polygon points="60,22 78,32 78,52 60,62 42,52 42,32" fill="none" stroke="#eef1f5" stroke-width="4"/>
