@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Family Frame</title>
+<style>
+  /* Layout: full-screen wall display, tab bar along the bottom, one panel visible at a time.
+     Written for old Android WebViews: no flex gap, no optional chaining, no modules. */
+  :root {
+    --bg: #14171c;
+    --panel: #1d2128;
+    --line: #2c323c;
+    --fg: #eef1f5;
+    --muted: #8d96a5;
+    --accent: #f2b544;
+    --font: "Roboto", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app { display: flex; flex-direction: column; height: 100%; }
+  .panel { flex: 1; min-height: 0; display: none; position: relative; }
+  .panel.active { display: block; }
+
+  /* Home */
+  .home {
+    height: 100%;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 4vh max(16px, 6vw);
+  }
+  .clock { font-size: 18vh; font-weight: 300; line-height: 1; letter-spacing: -0.02em; }
+  .date { font-size: 4.5vh; color: var(--muted); margin-top: 2vh; }
+  .note {
+    margin-top: 6vh; max-width: 36em; font-size: 2.6vh; color: var(--muted); line-height: 1.5;
+    border-left: 3px solid var(--accent); padding-left: 1em;
+  }
+
+  /* Games menu */
+  .games { height: 100%; padding: 5vh max(16px, 6vw); }
+  .games h2 {
+    margin: 0 0 4vh; font-size: 2.4vh; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+  }
+  .tiles { display: flex; flex-wrap: wrap; margin: -1.5vh; }
+  .tile {
+    width: 34vh; margin: 1.5vh; padding: 3.5vh 3vh;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    color: var(--fg); text-align: left; font: inherit; cursor: pointer;
+  }
+  .tile:active { border-color: var(--accent); }
+  .tile:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .tile .art { height: 14vh; margin-bottom: 2.5vh; display: flex; align-items: center; }
+  .tile .name { font-size: 3.4vh; font-weight: 600; }
+  .tile .how { font-size: 2.2vh; color: var(--muted); margin-top: 0.8vh; }
+  .grid4 { display: flex; flex-wrap: wrap; width: 12vh; }
+  .grid4 span {
+    width: 5.4vh; height: 5.4vh; margin: 0.3vh; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 2.2vh; color: #2b2116;
+  }
+
+  /* Game player (full screen over everything) */
+  .player { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #fff; display: none; z-index: 20; }
+  .player.open { display: block; }
+  .player iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .back {
+    position: absolute; top: 2vh; left: 2vh; z-index: 2;
+    background: var(--bg); color: var(--fg); border: 0; border-radius: 999px;
+    padding: 1.6vh 3vh; font: inherit; font-size: 2.4vh; font-weight: 600; cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  }
+  .loading {
+    position: absolute; top: 50%; left: 0; right: 0; text-align: center;
+    color: #6b7380; font-size: 2.6vh; margin-top: -1.3vh;
+  }
+
+  /* Tab bar */
+  .tabs { display: flex; border-top: 1px solid var(--line); background: var(--panel); }
+  .tab {
+    flex: 1; padding: 2.6vh 0; background: none; border: 0; color: var(--muted);
+    font: inherit; font-size: 2.6vh; font-weight: 600; cursor: pointer;
+    border-top: 3px solid transparent; margin-top: -1px;
+  }
+  .tab.active { color: var(--fg); border-top-color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <section class="panel active" id="panel-home">
+    <div class="home">
+      <div class="clock" id="clock">--:--</div>
+      <div class="date" id="date"></div>
+      <div class="note">Calendar, weather and chores will go here once the frame is set up.</div>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-games">
+    <div class="games">
+      <h2>Games</h2>
+      <div class="tiles">
+        <button class="tile" data-game="https://wayou.github.io/t-rex-runner/">
+          <div class="art">
+            <svg width="120" height="80" viewBox="0 0 120 80" aria-hidden="true">
+              <rect x="0" y="70" width="120" height="3" fill="#8d96a5"/>
+              <rect x="18" y="38" width="22" height="22" fill="#eef1f5"/>
+              <rect x="30" y="26" width="20" height="14" fill="#eef1f5"/>
+              <rect x="44" y="30" width="3" height="3" fill="#14171c"/>
+              <rect x="20" y="60" width="5" height="10" fill="#eef1f5"/>
+              <rect x="32" y="60" width="5" height="10" fill="#eef1f5"/>
+              <rect x="86" y="46" width="8" height="24" fill="#f2b544"/>
+              <rect x="80" y="52" width="6" height="4" fill="#f2b544"/>
+              <rect x="94" y="50" width="6" height="4" fill="#f2b544"/>
+            </svg>
+          </div>
+          <div class="name">Dino Run</div>
+          <div class="how">Tap the screen to jump</div>
+        </button>
+
+        <button class="tile" data-game="https://gabrielecirulli.github.io/2048/">
+          <div class="art">
+            <div class="grid4">
+              <span style="background:#eee4da">2</span>
+              <span style="background:#ede0c8">4</span>
+              <span style="background:#f2b179">8</span>
+              <span style="background:#edcf72">2k</span>
+            </div>
+          </div>
+          <div class="name">2048</div>
+          <div class="how">Swipe to slide and merge tiles</div>
+        </button>
+
+        <button class="tile" data-game="https://hextris.github.io/hextris/">
+          <div class="art">
+            <svg width="120" height="80" viewBox="0 0 120 80" aria-hidden="true">
+              <polygon points="60,22 78,32 78,52 60,62 42,52 42,32" fill="none" stroke="#eef1f5" stroke-width="4"/>
+              <rect x="56" y="6" width="8" height="10" fill="#e74c3c"/>
+              <rect x="88" y="38" width="10" height="8" fill="#3498db"/>
+              <rect x="22" y="38" width="10" height="8" fill="#f2b544"/>
+              <rect x="56" y="66" width="8" height="10" fill="#2ecc71"/>
+            </svg>
+          </div>
+          <div class="name">Hextris</div>
+          <div class="how">Tap left or right to spin the hexagon</div>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="home">Home</button>
+    <button class="tab" data-tab="games">Games</button>
+  </nav>
+</div>
+
+<div class="player" id="player">
+  <div class="loading">Loading game…</div>
+  <button class="back" id="back">&larr; Back</button>
+</div>
+
+<script>
+(function () {
+  // Tabs
+  var tabs = document.querySelectorAll('.tab');
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].addEventListener('click', function () {
+      var name = this.getAttribute('data-tab');
+      for (var j = 0; j < tabs.length; j++) {
+        tabs[j].className = 'tab' + (tabs[j] === this ? ' active' : '');
+      }
+      var panels = document.querySelectorAll('.panel');
+      for (var k = 0; k < panels.length; k++) {
+        panels[k].className = 'panel' + (panels[k].id === 'panel-' + name ? ' active' : '');
+      }
+    });
+  }
+
+  // Games open full screen in a frame; Back closes it and stops the game.
+  var player = document.getElementById('player');
+  var frame = null;
+  var tiles = document.querySelectorAll('.tile');
+  for (var t = 0; t < tiles.length; t++) {
+    tiles[t].addEventListener('click', function () {
+      frame = document.createElement('iframe');
+      frame.src = this.getAttribute('data-game');
+      frame.setAttribute('allow', 'autoplay');
+      player.insertBefore(frame, player.firstChild);
+      player.className = 'player open';
+      setTimeout(function () { if (frame) frame.focus(); }, 500);
+    });
+  }
+  document.getElementById('back').addEventListener('click', function () {
+    if (frame) { player.removeChild(frame); frame = null; }
+    player.className = 'player';
+  });
+
+  // Clock
+  var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  function tick() {
+    var d = new Date();
+    var h = d.getHours(), m = d.getMinutes();
+    var h12 = h % 12 || 12;
+    document.getElementById('clock').textContent = h12 + ':' + (m < 10 ? '0' : '') + m;
+    document.getElementById('date').textContent = days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate();
+  }
+  tick();
+  setInterval(tick, 10000);
+})();
+</script>
+</body>
+</html>
